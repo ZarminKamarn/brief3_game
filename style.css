@@ -1,0 +1,16 @@
+.body{
+    background-color: #9A4F2E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.game-area{
+    background-color: black;
+    width: 720px;
+    height: 565px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
