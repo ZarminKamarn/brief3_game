@@ -294,32 +294,21 @@ function moveCharacter(div: HTMLDivElement, dir: string){
             break;
         }
     }
-    let nextX: number = curX, nextY: number = curY;
-    switch(dir){
-    case "ArrowRight":
-        nextY = curY + 1;
-        break;
-    case "ArrowLeft":
-        nextY = curY - 1;
-        break;
-    case "ArrowUp":
-        nextX = curX - 1;
-        break;
-    case "ArrowDown":
-        nextX = curX + 1;
-        break;
-    }
 
-    console.log(keyNumber);
+    const nextCoord: Array<number> = getCoordAfterMove(curX, curY, dir);
 
-    if(canMove(nextX, nextY)){
-        const moveToCase = curLvl[nextX][nextY];
+    if(canCharacterMove(nextCoord[0], nextCoord[1], dir)){
+        const moveToCase = curLvl[nextCoord[0]][nextCoord[1]];
+
+        if(moveToCase === 4){
+            moveElement(nextCoord[0], nextCoord[1], dir);
+        }
 
         curLvl[curX][curY] = 0;
-        curLvl[nextX][nextY] = 1;
+        curLvl[nextCoord[0]][nextCoord[1]] = 1;
 
         generateGridImage(<HTMLDivElement>document.getElementById(generateId(curX, curY)), curX, curY);
-        generateGridImage(<HTMLDivElement>document.getElementById(generateId(nextX, nextY)), nextX, nextY);
+        generateGridImage(<HTMLDivElement>document.getElementById(generateId(nextCoord[0], nextCoord[1])), nextCoord[0], nextCoord[1]);
 
         if(moveToCase === 5){
             keyNumber++;
@@ -332,11 +321,51 @@ function moveCharacter(div: HTMLDivElement, dir: string){
     }
 }
 
+function getCoordAfterMove(posX: number, posY: number, dir: string): Array<number>{
+    let nextX: number = posX, nextY: number = posY;
+    switch(dir){
+    case "ArrowRight":
+        nextY = posY + 1;
+        break;
+    case "ArrowLeft":
+        nextY = posY - 1;
+        break;
+    case "ArrowUp":
+        nextX = posX - 1;
+        break;
+    case "ArrowDown":
+        nextX = posX + 1;
+        break;
+    }
+    return [nextX, nextY];
+}
 
+function moveElement(coordX: number,coordY: number, dir: string){
+    const nextCoord: Array<number> = getCoordAfterMove(coordX, coordY, dir);
+    curLvl[nextCoord[0]][nextCoord[1]] = 4;
+    curLvl[coordX][coordY] = 0;
 
-function canMove(posX: number, posY: number): boolean{
+    generateGridImage(<HTMLDivElement>document.getElementById(generateId(nextCoord[0], nextCoord[1])), nextCoord[0], nextCoord[1]);
+}
+
+function canCharacterMove(posX: number, posY: number, dir: string): boolean{
     if(posX >= 0 && posY >= 0 && posX < curLvl.length && posY < curLvl[posX].length){
+        if(curLvl[posX][posY] === 4){
+            const newCoord: Array<number> = getCoordAfterMove(posX, posY, dir);
+            if(!canBlocMove(newCoord[0], newCoord[1], dir)){
+                return false;
+            }
+        }
         if (curLvl[posX][posY] !== 2 && curLvl[posX][posY] !== 3){
+            return true;
+        }
+    }
+    return false;
+}
+
+function canBlocMove(posX: number, posY: number, dir: string): boolean{
+    if(posX >= 0 && posY >= 0 && posX < curLvl.length && posY < curLvl[posX].length){
+        if (curLvl[posX][posY] !== 2 && curLvl[posX][posY] !== 3 && curLvl[posX][posY] !== 4){
             return true;
         }
     }
