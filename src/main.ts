@@ -1,30 +1,21 @@
-import { lvl1, correspondance, instructions, arrows, instructionsImg, keys } from "./matrix.js";
+import { levels, correspondance, instructions, arrows, instructionsImg, keys, keysByLvl } from "./data.js";
 
 const gameArea: HTMLElement | null = document.getElementById("gameArea");
+const gameScreen: HTMLElement | null = document.getElementById("gameScreen");
 const letters: Array<string> = ["a","b","c","d","e","f","g","h","i","j","k"];
 
 let curLvl: Array<Array<number>> = [];
 let lvlNumber: number = 0;
-const maxLvl: number = 0;
+const maxLvl: number = levels.length-1;
 let lastMoveTime = 0;
 const moveDelay = 100;
 
 let keyNumber: number = 0;
+let maxKeys: number = keysByLvl[lvlNumber];
 let curInstruction = 0;
 
-if(gameArea){
-    const gameScreen: HTMLDivElement = document.createElement("div");
-    gameScreen.style.backgroundImage = "url(../images/gameBackground.png)";
-    gameScreen.style.backgroundRepeat = "no-repeat";
-    gameScreen.style.backgroundSize = "cover";
-    gameScreen.style.width = "500px";
-    gameScreen.style.height = "500px";
-    gameScreen.style.padding = "38px";
-    gameScreen.style.boxSizing = "border-box";
-    gameScreen.style.display = "flex";
-
-    initTitleScreen(gameScreen);
-    gameArea.appendChild(gameScreen);
+if(gameScreen){
+    initTitleScreen(gameScreen as HTMLDivElement);
 }
 
 function howToPlay(div: HTMLDivElement){
@@ -57,10 +48,8 @@ function howToPlay(div: HTMLDivElement){
 }
 
 function initTitleScreen(div: HTMLDivElement){
-    div.style.display = "flex";
-    div.style.flexDirection = "column";
-    div.style.justifyContent = "space-evenly";
-    div.style.alignItems = "center";
+    div.classList.add("game-screen-accueil");
+    div.classList.remove("game-screen-game");
 
     resetGame(div);
 
@@ -71,12 +60,12 @@ function initTitleScreen(div: HTMLDivElement){
     const img: HTMLImageElement = document.createElement("img");
 
     img.src = "../images/character.png";
-    img.style.width = "35px";
+    img.classList.add("icon");
 
     div.append(btnPlay, img, btnHow);
 
     btnPlay.addEventListener("click", function(){
-        initGame(div);
+        initFirstGame(div);
     });
 
     btnHow.addEventListener("click", function(){
@@ -94,6 +83,12 @@ function resetGame(div: HTMLDivElement){
     document.removeEventListener("keydown", function(event){
         movementListener(div, event);
     })
+
+    const resetBtn: HTMLElement | null = document.getElementById("reset");
+    const gameArea: HTMLElement | null = document.getElementById("gameArea");
+    if(resetBtn && gameArea){
+        gameArea.removeChild(resetBtn);
+    }
 }
 
 function resetDiv(div: HTMLDivElement){
@@ -102,28 +97,42 @@ function resetDiv(div: HTMLDivElement){
     }
 }
 
-function initGame(div: HTMLDivElement){
-    div.style.display = "grid";
-    div.style.gridTemplateColumns = "repeat(11, 1fr)";
-    div.style.gridTemplateRows= "repeat(11, 1fr)";
+function initFirstGame(div: HTMLDivElement){
+    if(gameArea){
+        const btn: HTMLButtonElement = document.createElement("button");
+        btn.innerText = "RESET";
+        btn.classList.add("reset-btn");
+        btn.id = "reset";
+        gameArea.appendChild(btn);
 
-    resetDiv(div);
+        btn.addEventListener("click", function(){
+            resetLvl(div, lvlNumber);
+        })
+    }
 
-    initGrid(div);
+    initGame(div);
 
     document.addEventListener("keydown", function(event){
         movementListener(div, event);
     })
+}
 
+function initGame(div: HTMLDivElement){
+    keyNumber = 0
+    div.classList.add("game-screen-game");
+    div.classList.remove("game-screen-accueil");
+
+    resetDiv(div);
+
+    initGrid(div);
 }
 
 function initGrid(div: HTMLDivElement){
     for(let i: number = 0; i < 11; i++){
         for(let j: number = 0; j < 11; j++){
             const divGrid: HTMLDivElement = document.createElement("div");
+            divGrid.classList.add("fit-element");
             divGrid.id = generateId(i, j);
-            divGrid.style.height = "100%";
-            divGrid.style.width = "100%";
             generateGridImage(divGrid, i, j);
             div.append(divGrid);
         }
@@ -148,8 +157,7 @@ function generateGridImage(div: HTMLDivElement, i: number, j: number): void{
     if (src !== ""){
         const img: HTMLImageElement = document.createElement("img");
         img.src = src;
-        img.style.height = "90%";
-        img.style.width = "auto";
+        img.classList.add("game-image");
 
         div.appendChild(img);
     }
@@ -157,14 +165,8 @@ function generateGridImage(div: HTMLDivElement, i: number, j: number): void{
 
 function generateInstructionCard(div: HTMLDivElement, num: number): void{
     const card: HTMLParagraphElement = document.createElement("div");
-    styleGlassElement(card);
-    card.style.width = "90%";
-    card.style.padding = "24px";
-    card.style.height = "60%";
-    card.style.display = "flex";
-    card.style.flexDirection = "column";
-    card.style.justifyContent = "space-evenly";
-
+    card.classList.add("glass-element", "card");
+    
     generateCardImages(card, num);
     generateReturnButton(card);
 
@@ -179,17 +181,7 @@ function generateInstructionCard(div: HTMLDivElement, num: number): void{
 
 function generateReturnButton(div: HTMLDivElement){
     const btn: HTMLButtonElement = document.createElement("button");
-    btn.style.backgroundColor = "white";
-    btn.style.width = "30px";
-    btn.style.height = "30px";
-    btn.style.position = "absolute";
-    btn.style.top = "0px";
-    btn.style.right = "0px";
-    btn.style.margin = "0";
-    btn.style.color = "black";
-    btn.style.display = "flex";
-    btn.style.alignItems = "center";
-    btn.style.justifyContent = "center";
+    btn.classList.add("return-btn");
     btn.id = "returnBtn";
 
     const p: HTMLParagraphElement = document.createElement("p");
@@ -202,14 +194,12 @@ function generateReturnButton(div: HTMLDivElement){
 function generateCardImages(div: HTMLDivElement, num: number){
     if(instructionsImg[num].length !== 0){
         const divImg: HTMLDivElement = document.createElement("div");
-        divImg.style.display = "flex"
-        divImg.style.gap = "20px";
-        divImg.style.justifyContent = "center";
+        divImg.classList.add("card-images");
 
         instructionsImg[num].forEach(function(imgId){
             const img: HTMLImageElement = document.createElement("img");
             img.src = correspondance[imgId];
-            img.style.width = "35px";
+            img.classList.add("icon");
             divImg.appendChild(img);
         });
         div.appendChild(divImg);
@@ -218,57 +208,54 @@ function generateCardImages(div: HTMLDivElement, num: number){
 
 function generateCardButtons(div: HTMLDivElement, num: number){
     const divBtn: HTMLDivElement = document.createElement("div");
-    divBtn.style.display = "flex";
-    divBtn.style.justifyContent = "space-between";
-    divBtn.style.width = "100%";
+    divBtn.classList.add("card-btns");
+
     if (num > 0){
-        const btnBack: HTMLButtonElement = document.createElement("button");
+        const btnBack: HTMLButtonElement = generateButtonArrow(0);
         btnBack.id = "previous";
-        const imgBack: HTMLImageElement = document.createElement("img");
-        imgBack.src = arrows[0];
-        imgBack.style.width = "50px";
-        btnBack.appendChild(imgBack);
         divBtn.appendChild(btnBack);
     }
     else{
         divBtn.style.justifyContent = "flex-end";
     }
     if (num < instructions.length - 1){
-        const btnForward: HTMLButtonElement = document.createElement("button");
+        const btnForward: HTMLButtonElement = generateButtonArrow(1);
         btnForward.id = "next";   
-        const imgForward: HTMLImageElement = document.createElement("img");
-        imgForward.src = arrows[1];
-        imgForward.style.width = "50px";
-        btnForward.appendChild(imgForward);
+        
         divBtn.appendChild(btnForward);
     }
     div.appendChild(divBtn);
 }
 
+function generateButtonArrow(num: number): HTMLButtonElement{
+    const btn: HTMLButtonElement = document.createElement("button");
+    const img: HTMLImageElement = document.createElement("img");
+
+    btn.classList.add("card-btn");
+    img.src = arrows[num];
+    img.classList.add("fit-element");
+    btn.appendChild(img);
+
+    return btn;
+}
+
 function generateButton(text: string): HTMLButtonElement{
     const btn: HTMLButtonElement = document.createElement("button");
     btn.innerText = text;
-    styleGlassElement(btn);
-    btn.style.borderRadius = "20px";
-    btn.style.padding = "12px 48px";
+    btn.classList.add("glass-element", "btn");
     return btn;
 }
 
 function generateTitleHowToPlay(div: HTMLDivElement){
     const title: HTMLParagraphElement = document.createElement("p");
     title.innerText = "Comment jouer ?";
-    styleGlassElement(title);
-    title.style.padding = "12px 48px";
+    title.classList.add("glass-element", "instruction-title");
 
     div.appendChild(title);
 }
 
 function styleGlassElement(element: HTMLElement){
-    element.style.border = "3px solid white";
-    element.style.backgroundColor = "rgba(78, 38, 38, 0.25)";
-    element.style.backdropFilter = "blur(2px)";
-    element.style.boxSizing = "border-box";
-    element.style.color = "white";
+    element.classList.add("glass-element");
 }
 
 function movementListener(div: HTMLDivElement, event: KeyboardEvent){
@@ -304,19 +291,22 @@ function moveCharacter(div: HTMLDivElement, dir: string){
             moveElement(nextCoord[0], nextCoord[1], dir);
         }
 
-        curLvl[curX][curY] = 0;
-        curLvl[nextCoord[0]][nextCoord[1]] = 1;
-
-        generateGridImage(<HTMLDivElement>document.getElementById(generateId(curX, curY)), curX, curY);
-        generateGridImage(<HTMLDivElement>document.getElementById(generateId(nextCoord[0], nextCoord[1])), nextCoord[0], nextCoord[1]);
+        moveElement(curX, curY, dir);
 
         if(moveToCase === 5){
             keyNumber++;
             generateExit();
         }
 
-        if(isLevelOver(moveToCase) && lvlNumber === maxLvl){
-            drawEndScreen(div);
+        if(isLevelOver(moveToCase)){
+            if(lvlNumber === maxLvl){
+                drawEndGameScreen(div);
+            }
+            else{
+                lvlNumber++;
+                maxKeys = keysByLvl[lvlNumber];
+                drawEndLvlScreen(div);
+            }
         }
     }
 }
@@ -342,9 +332,10 @@ function getCoordAfterMove(posX: number, posY: number, dir: string): Array<numbe
 
 function moveElement(coordX: number,coordY: number, dir: string){
     const nextCoord: Array<number> = getCoordAfterMove(coordX, coordY, dir);
-    curLvl[nextCoord[0]][nextCoord[1]] = 4;
+    curLvl[nextCoord[0]][nextCoord[1]] = curLvl[coordX][coordY];
     curLvl[coordX][coordY] = 0;
 
+    generateGridImage(<HTMLDivElement>document.getElementById(generateId(coordX, coordY)), coordX, coordY);
     generateGridImage(<HTMLDivElement>document.getElementById(generateId(nextCoord[0], nextCoord[1])), nextCoord[0], nextCoord[1]);
 }
 
@@ -373,45 +364,25 @@ function canBlocMove(posX: number, posY: number, dir: string): boolean{
 }
 
 function isLevelOver(caseValue: number): boolean{
-    if(caseValue === 9 && keyNumber === 1){
+    if(caseValue === 9 && keyNumber === maxKeys){
         return true;
     }
     return false;
 }
 
-function drawEndScreen(div: HTMLDivElement){
+function drawEndGameScreen(div: HTMLDivElement){
     const divEndScreen: HTMLDivElement = document.createElement("div");
-    divEndScreen.style.width = "100%";
-    divEndScreen.style.height = "100%";
-    divEndScreen.style.position = "absolute";
-    divEndScreen.style.top = "0px";
-    divEndScreen.style.left = "0px";
-    divEndScreen.style.display = "flex";
-    divEndScreen.style.flexDirection = "column";
-    divEndScreen.style.justifyContent = "space-evenly";
-    divEndScreen.style.alignItems = "center";
-
-    div.style.position = "relative";
+    divEndScreen.classList.add("end-lvl-area");
 
     const divText: HTMLDivElement = document.createElement("div");
-    styleGlassElement(divText);
-    divText.style.padding = "24px";
-    divText.style.height = "40%";
-    divText.style.display = "flex";
-    divText.style.justifyContent = "center";
-    divText.style.alignItems = "center";
-    divText.style.textAlign = "center";
-    divText.style.backgroundColor = "rgba(78, 38, 38, 0.9)";
+    divText.classList.add("glass-element");
+    divText.classList.add("end-lvl");
 
     const p: HTMLParagraphElement = document.createElement("p");
     p.innerHTML = "Félicitations, vous avez fini le jeu!";
     divText.appendChild(p);
 
-    const btn: HTMLButtonElement = document.createElement("button");
-    styleGlassElement(btn);
-    btn.innerText = "Retour à l'accueil";
-    btn.style.borderRadius = "20px";
-    btn.style.padding = "12px 48px";
+    const btn: HTMLButtonElement = generateButton("Retour à l'accueil");
     btn.id = "returnBtn";
 
     divEndScreen.append(divText, btn);
@@ -422,22 +393,39 @@ function drawEndScreen(div: HTMLDivElement){
     })
 }
 
-function initLvl(lvl?: number){
-    if(lvl){
-        copyLvl();
-    }
-    else{
-        copyLvl();
-    }
+function drawEndLvlScreen(div: HTMLDivElement){
+    const divEndScreen: HTMLDivElement = document.createElement("div");
+    divEndScreen.classList.add("end-lvl-area");
+
+    div.style.position = "relative";
+
+    const divText: HTMLDivElement = document.createElement("div");
+    divText.classList.add("glass-element");
+    divText.classList.add("end-lvl");
+
+    const p: HTMLParagraphElement = document.createElement("p");
+    p.innerHTML = `Vous avez fini le niveau ${lvlNumber}!`;
+    divText.appendChild(p);
+
+    const btn: HTMLButtonElement = generateButton("Niveau suivant");
+    btn.id = "returnBtn";
+
+    divEndScreen.append(divText, btn);
+    div.appendChild(divEndScreen);
+
+    btn.addEventListener("click", function(){
+        initLvl(lvlNumber);
+        initGame(div);
+    })
 }
 
-function copyLvl(lvl?: number){
+function initLvl(lvl: number=0){
     curLvl = [];
     let arr = [];
-    for(let i = 0; i < lvl1.length; i++){
+    for(let i = 0; i < levels[lvl].length; i++){
         arr = [];
-        for(let j = 0; j < lvl1[i].length; j++){
-            arr.push(lvl1[i][j]);
+        for(let j = 0; j < levels[lvl][i].length; j++){
+            arr.push(levels[lvl][i][j]);
         }
         curLvl.push(arr);
     }
@@ -450,4 +438,11 @@ function generateExit(){
     else{
         alert("Exit blocked. Impossible to leave");
     }
+}
+
+function resetLvl(div: HTMLDivElement, lvl: number=0){
+    resetDiv(div);
+    initLvl(lvl);
+    initGrid(div);
+    keyNumber = 0;
 }
