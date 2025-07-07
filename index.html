@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="images/character.png">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script type="module" src="dist/main.js"></script>
     <title>Adventures of Lolo</title>
 </head>
@@ -12,7 +14,27 @@
     <div class="game-area" id="gameArea">
         <div class="game-screen" id="gameScreen"></div>
     </div>
-    
+    <div class="game-btns">
+        <div class="btn-line">
+            <button class="game-btn" id="ArrowUp">
+                <img class="fit-element" src="./images/arrowUp.png" alt="">
+            </button>
+        </div>
+        <div class="btn-line">
+            <button class="game-btn" id="ArrowLeft">
+                <img class="fit-element" src="./images/arrowLeft.png" alt="">
+            </button>
+            <button class="game-btn" id="ArrowDown">
+                <img class="fit-element" src="./images/arrowDown.png" alt="">
+            </button>
+            <button class="game-btn" id="ArrowRight">
+                <img class="fit-element" src="./images/arrowRight.png" alt="">
+            </button>
+        </div>
+        <div class="btn-line">
+            <button class="text-btn" id="shoot">Shoot</button>
+        </div>
+    </div>
     <script src="dist/main.js"></script>
 </body>
 </html>

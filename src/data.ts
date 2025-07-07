@@ -13,32 +13,32 @@ export const levels : Array<Array<Array<number>>> = [
         [0,0,3,0,0,1,0,2,2,2,2]
     ],
     [
-        [2,2,2,2,0,0,0,2,0,0,3],
-        [2,0,0,0,4,0,2,2,4,5,3],
+        [2,2,2,2,0,0,0,2,3,3,3],
+        [2,0,0,0,4,0,2,2,2,5,3],
         [2,0,2,0,0,3,3,0,0,0,0],
-        [3,0,0,2,3,3,3,4,4,4,3],
-        [0,4,4,3,3,0,0,0,0,0,3],
-        [3,0,4,0,3,0,0,0,0,3,3],
-        [3,0,0,3,0,0,0,0,0,0,0],
-        [3,0,0,0,0,0,0,0,2,2,0],
+        [3,6,0,2,3,3,3,4,4,4,3],
+        [0,0,0,0,0,0,0,0,0,0,3],
+        [3,0,0,0,0,0,0,0,0,3,3],
+        [3,0,0,0,0,0,0,0,0,0,0],
+        [3,0,0,0,0,0,0,0,2,2,5],
         [0,3,0,0,0,0,0,2,2,2,2],
         [0,3,0,0,0,0,0,2,2,2,2],
         [0,0,3,0,0,1,0,2,2,2,2]
     ]
 ];
 
-export const keysByLvl: Array<number> = [1, 1];
+export const keysByLvl: Array<number> = [1, 2];
 
 export const correspondance: Array<string> = [
     "",
-    "../images/character.png",
+    "../images/characterDown.png",
     "../images/tree.png",
     "../images/boulder.png",
     "../images/bloc.png",
     "../images/key.png",
-    "",
-    "",
-    "",
+    "../images/snake.png",
+    "../images/ball.png",
+    "../images/shootDown.png",
     ""
 ];
 
@@ -48,7 +48,7 @@ export const instructions: Array<string> = [
     "Les rochers et les arbres bloquent ton chemin. Il faut passer ailleurs",
     "Tu peux pousser les blocs pour te déplacer. Mais attention à ne pas te bloquer.",
     "Tu peux redémarrer le niveau si tu es bloqué, mais cela te fait perdre une vie. N’en abuse pas.",
-    "Récupère la clé pour ouvrir la porte et passer au niveau suivant",
+    "Récupère toutes les clés pour ouvrir la porte et passer au niveau suivant",
     "Bonne chance !"
 ];
 
@@ -63,4 +63,10 @@ export const instructionsImg: Array<Array<number>> = [
 ];
 
 export const keys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
+export const characterOrientation = ["../images/characterRight.png", "../images/characterLeft.png", "../images/characterUp.png", "../images/characterDown.png"]
+export const shootOrientation = ["../images/shootRight.png", "../images/shootLeft.png", "../images/shootUp.png", "../images/shootDown.png"]
 export const arrows = ["../images/arrowLeft.png", "../images/arrowRight.png", "../images/arrowUp.png", "../images/arrowDown.png"];
+export const letters: Array<string> = ["a","b","c","d","e","f","g","h","i","j","k"];
+export const maxLvl: number = levels.length-1;
+export const gameArea: HTMLElement | null = document.getElementById("gameArea");
+export const gameScreen: HTMLElement | null = document.getElementById("gameScreen");

@@ -1,24 +1,29 @@
-import { levels, correspondance, instructions, arrows, instructionsImg, keys, keysByLvl } from "./data.js";
-
-const gameArea: HTMLElement | null = document.getElementById("gameArea");
-const gameScreen: HTMLElement | null = document.getElementById("gameScreen");
-const letters: Array<string> = ["a","b","c","d","e","f","g","h","i","j","k"];
+import { levels, correspondance, instructions, arrows, instructionsImg, keys, keysByLvl, letters, maxLvl, gameArea, gameScreen, characterOrientation, shootOrientation } from "./data.js";
 
 let curLvl: Array<Array<number>> = [];
 let lvlNumber: number = 0;
-const maxLvl: number = levels.length-1;
 let lastMoveTime = 0;
-const moveDelay = 100;
 
 let keyNumber: number = 0;
 let maxKeys: number = keysByLvl[lvlNumber];
 let curInstruction = 0;
+let curMovement = 3;
+
+let ammo = 2;
+let shotAmmo = false;
+
+const arrowUp: HTMLElement | null = document.getElementById("ArrowUp");
+const arrowLeft: HTMLElement | null = document.getElementById("ArrowLeft");
+const arrowDown: HTMLElement | null = document.getElementById("ArrowDown");
+const arrowRight: HTMLElement | null = document.getElementById("ArrowRight");
+
+const btnShoot: HTMLElement | null = document.getElementById("shoot");
 
 if(gameScreen){
-    initTitleScreen(gameScreen as HTMLDivElement);
+    initTitleScreen(gameScreen);
 }
 
-function howToPlay(div: HTMLDivElement){
+function howToPlay(div: HTMLElement){
     resetDiv(div);
     generateTitleHowToPlay(div);
     generateInstructionCard(div, curInstruction);
@@ -47,19 +52,19 @@ function howToPlay(div: HTMLDivElement){
     }
 }
 
-function initTitleScreen(div: HTMLDivElement){
+function initTitleScreen(div: HTMLElement){
     div.classList.add("game-screen-accueil");
     div.classList.remove("game-screen-game");
 
+    resetCharacter();
     resetGame(div);
 
     const btnPlay: HTMLButtonElement = generateButton("Jouer");
     btnPlay.id = "playGame";
     const btnHow: HTMLButtonElement = generateButton("Comment jouer ?");
     btnHow.id = "howToPlay";
-    const img: HTMLImageElement = document.createElement("img");
-
-    img.src = "../images/character.png";
+    
+    const img: HTMLImageElement = generateImage(correspondance[1]);
     img.classList.add("icon");
 
     div.append(btnPlay, img, btnHow);
@@ -73,16 +78,26 @@ function initTitleScreen(div: HTMLDivElement){
     });
 }
 
-function resetGame(div: HTMLDivElement){
+function resetGame(div: HTMLElement){
     resetDiv(div);
     initLvl();
     curInstruction = 0;
     lvlNumber = 0;
     keyNumber = 0;
+    ammo = 2;
 
     document.removeEventListener("keydown", function(event){
-        movementListener(div, event);
+        movementListener(div, event.key);
     })
+
+    if(arrowUp && arrowLeft && arrowDown && arrowRight){
+        const arrArrows: Array<HTMLElement> = [arrowUp, arrowDown, arrowRight, arrowLeft];
+        arrArrows.forEach(function(arrow){
+            arrow.removeEventListener("click", function(){
+                movementListener(div, arrow.id);
+            });
+        })
+    }
 
     const resetBtn: HTMLElement | null = document.getElementById("reset");
     const gameArea: HTMLElement | null = document.getElementById("gameArea");
@@ -91,13 +106,13 @@ function resetGame(div: HTMLDivElement){
     }
 }
 
-function resetDiv(div: HTMLDivElement){
+function resetDiv(div: HTMLElement){
     while (div.firstChild) {
         div.removeChild(div.firstChild);
     }
 }
 
-function initFirstGame(div: HTMLDivElement){
+function initFirstGame(div: HTMLElement){
     if(gameArea){
         const btn: HTMLButtonElement = document.createElement("button");
         btn.innerText = "RESET";
@@ -112,22 +127,44 @@ function initFirstGame(div: HTMLDivElement){
 
     initGame(div);
 
+    if(arrowUp && arrowLeft && arrowDown && arrowRight){
+        const arrArrows: Array<HTMLElement> = [arrowUp, arrowDown, arrowRight, arrowLeft];
+        arrArrows.forEach(function(arrow){
+            arrow.addEventListener("click", function(){
+                movementListener(div, arrow.id);
+            });
+        })
+    }
+    if(btnShoot){
+        btnShoot.addEventListener("click", function(){
+            shoot();
+        })
+    }
+
     document.addEventListener("keydown", function(event){
-        movementListener(div, event);
-    })
+        if(event.key === " "){
+            shoot();
+        }
+        if(keys.indexOf(event.key) !== -1){
+            event.preventDefault();
+            movementListener(div, event.key);
+        };
+    });
 }
 
-function initGame(div: HTMLDivElement){
+function initGame(div: HTMLElement){
     keyNumber = 0
     div.classList.add("game-screen-game");
     div.classList.remove("game-screen-accueil");
+    ammo = 2;
 
     resetDiv(div);
+    resetCharacter();
 
     initGrid(div);
 }
 
-function initGrid(div: HTMLDivElement){
+function initGrid(div: HTMLElement){
     for(let i: number = 0; i < 11; i++){
         for(let j: number = 0; j < 11; j++){
             const divGrid: HTMLDivElement = document.createElement("div");
@@ -151,19 +188,18 @@ function generateId(x: number, y: number): string{
     return id;
 }
 
-function generateGridImage(div: HTMLDivElement, i: number, j: number): void{
+function generateGridImage(div: HTMLElement, i: number, j: number): void{
     resetDiv(div);
     const src: string = correspondance[curLvl[i][j]];
     if (src !== ""){
-        const img: HTMLImageElement = document.createElement("img");
-        img.src = src;
+        const img: HTMLImageElement = generateImage(src);
         img.classList.add("game-image");
 
         div.appendChild(img);
     }
 }
 
-function generateInstructionCard(div: HTMLDivElement, num: number): void{
+function generateInstructionCard(div: HTMLElement, num: number): void{
     const card: HTMLParagraphElement = document.createElement("div");
     card.classList.add("glass-element", "card");
     
@@ -179,7 +215,7 @@ function generateInstructionCard(div: HTMLDivElement, num: number): void{
     div.appendChild(card);
 }
 
-function generateReturnButton(div: HTMLDivElement){
+function generateReturnButton(div: HTMLElement){
     const btn: HTMLButtonElement = document.createElement("button");
     btn.classList.add("return-btn");
     btn.id = "returnBtn";
@@ -191,14 +227,13 @@ function generateReturnButton(div: HTMLDivElement){
     div.appendChild(btn);
 }
 
-function generateCardImages(div: HTMLDivElement, num: number){
+function generateCardImages(div: HTMLElement, num: number){
     if(instructionsImg[num].length !== 0){
         const divImg: HTMLDivElement = document.createElement("div");
         divImg.classList.add("card-images");
 
         instructionsImg[num].forEach(function(imgId){
-            const img: HTMLImageElement = document.createElement("img");
-            img.src = correspondance[imgId];
+            const img: HTMLImageElement = generateImage(correspondance[imgId]);
             img.classList.add("icon");
             divImg.appendChild(img);
         });
@@ -206,7 +241,7 @@ function generateCardImages(div: HTMLDivElement, num: number){
     }
 }
 
-function generateCardButtons(div: HTMLDivElement, num: number){
+function generateCardButtons(div: HTMLElement, num: number){
     const divBtn: HTMLDivElement = document.createElement("div");
     divBtn.classList.add("card-btns");
 
@@ -229,10 +264,9 @@ function generateCardButtons(div: HTMLDivElement, num: number){
 
 function generateButtonArrow(num: number): HTMLButtonElement{
     const btn: HTMLButtonElement = document.createElement("button");
-    const img: HTMLImageElement = document.createElement("img");
+    const img: HTMLImageElement = generateImage(arrows[num]);
 
     btn.classList.add("card-btn");
-    img.src = arrows[num];
     img.classList.add("fit-element");
     btn.appendChild(img);
 
@@ -246,7 +280,7 @@ function generateButton(text: string): HTMLButtonElement{
     return btn;
 }
 
-function generateTitleHowToPlay(div: HTMLDivElement){
+function generateTitleHowToPlay(div: HTMLElement){
     const title: HTMLParagraphElement = document.createElement("p");
     title.innerText = "Comment jouer ?";
     title.classList.add("glass-element", "instruction-title");
@@ -254,48 +288,66 @@ function generateTitleHowToPlay(div: HTMLDivElement){
     div.appendChild(title);
 }
 
-function styleGlassElement(element: HTMLElement){
-    element.classList.add("glass-element");
-}
-
-function movementListener(div: HTMLDivElement, event: KeyboardEvent){
+function movementListener(div: HTMLElement, key: string){
     const now = Date.now();
-    if (now - lastMoveTime < moveDelay) {
+    if (now - lastMoveTime < 100) {
         return; // trop tôt, on ignore cette pression
     }
 
-    if(keys.indexOf(event.key) !== -1){
-        event.preventDefault();
-        moveCharacter(div, event.key);
-    };
+    if(curMovement === keys.indexOf(key)){
+        moveCharacter(div, key);
+    }
+    else{
+        turnCharacter(div, key);
+        return;
+    }
 
     lastMoveTime = now;
 }
 
-function moveCharacter(div: HTMLDivElement, dir: string){
-    let curX: number = -1, curY: number = -1;
-    for(let i = 0; i < curLvl.length; i++){
-        if(curLvl[i].indexOf(1) !== -1){
-            curX = i;
-            curY = curLvl[i].indexOf(1);
+function turnCharacter(div: HTMLElement, dir: string){
+    const curCoord: Array<number> = getCurrentCoord();
+    const curTile: HTMLElement | null =  document.getElementById(generateId(curCoord[0], curCoord[1]));
+
+    if(curTile){
+        switch(dir){
+        case "ArrowRight":
+            curMovement = 0;
+            break;
+        case "ArrowLeft":
+            curMovement = 1;
+            break;
+        case "ArrowUp":
+            curMovement = 2;
+            break;
+        case "ArrowDown":
+            curMovement = 3;
             break;
         }
+        correspondance[1] = characterOrientation[curMovement];
+        generateGridImage(curTile, curCoord[0], curCoord[1]);
     }
+}
 
-    const nextCoord: Array<number> = getCoordAfterMove(curX, curY, dir);
+function moveCharacter(div: HTMLElement, dir: string){
+    const curCoord: Array<number> = getCurrentCoord();
+
+    const nextCoord: Array<number> = getCoordAfterMove(curCoord[0], curCoord[1], dir);
 
     if(canCharacterMove(nextCoord[0], nextCoord[1], dir)){
         const moveToCase = curLvl[nextCoord[0]][nextCoord[1]];
 
-        if(moveToCase === 4){
+        if(moveToCase === 4 || moveToCase === 7){
             moveElement(nextCoord[0], nextCoord[1], dir);
         }
 
-        moveElement(curX, curY, dir);
+        moveElement(curCoord[0], curCoord[1], dir);
 
         if(moveToCase === 5){
             keyNumber++;
-            generateExit();
+            if(keyNumber === maxKeys){
+                generateExit();
+            }
         }
 
         if(isLevelOver(moveToCase)){
@@ -309,6 +361,19 @@ function moveCharacter(div: HTMLDivElement, dir: string){
             }
         }
     }
+}
+
+function getCurrentCoord(){
+    let curX: number = -1, curY: number = -1;
+    for(let i = 0; i < curLvl.length; i++){
+        if(curLvl[i].indexOf(1) !== -1){
+            curX = i;
+            curY = curLvl[i].indexOf(1);
+            break;
+        }
+    }
+
+    return [curX, curY];
 }
 
 function getCoordAfterMove(posX: number, posY: number, dir: string): Array<number>{
@@ -335,19 +400,27 @@ function moveElement(coordX: number,coordY: number, dir: string){
     curLvl[nextCoord[0]][nextCoord[1]] = curLvl[coordX][coordY];
     curLvl[coordX][coordY] = 0;
 
-    generateGridImage(<HTMLDivElement>document.getElementById(generateId(coordX, coordY)), coordX, coordY);
-    generateGridImage(<HTMLDivElement>document.getElementById(generateId(nextCoord[0], nextCoord[1])), nextCoord[0], nextCoord[1]);
+    const curTile: HTMLElement | null =  document.getElementById(generateId(coordX, coordY));
+    const nextTile: HTMLElement | null =  document.getElementById(generateId(nextCoord[0], nextCoord[1]));
+
+    if(curTile && nextTile){
+        generateGridImage(curTile, coordX, coordY);
+        generateGridImage(nextTile, nextCoord[0], nextCoord[1]);
+    }
 }
 
 function canCharacterMove(posX: number, posY: number, dir: string): boolean{
     if(posX >= 0 && posY >= 0 && posX < curLvl.length && posY < curLvl[posX].length){
-        if(curLvl[posX][posY] === 4){
+        if(curLvl[posX][posY] === 4 || curLvl[posX][posY] === 7){
             const newCoord: Array<number> = getCoordAfterMove(posX, posY, dir);
             if(!canBlocMove(newCoord[0], newCoord[1], dir)){
                 return false;
             }
+            else{
+                return true;
+            }
         }
-        if (curLvl[posX][posY] !== 2 && curLvl[posX][posY] !== 3){
+        if (curLvl[posX][posY] === 0 || curLvl[posX][posY] === 9 || curLvl[posX][posY] === 5){
             return true;
         }
     }
@@ -356,7 +429,7 @@ function canCharacterMove(posX: number, posY: number, dir: string): boolean{
 
 function canBlocMove(posX: number, posY: number, dir: string): boolean{
     if(posX >= 0 && posY >= 0 && posX < curLvl.length && posY < curLvl[posX].length){
-        if (curLvl[posX][posY] !== 2 && curLvl[posX][posY] !== 3 && curLvl[posX][posY] !== 4){
+        if (curLvl[posX][posY] === 0 || curLvl[posX][posY] === 9){
             return true;
         }
     }
@@ -370,7 +443,7 @@ function isLevelOver(caseValue: number): boolean{
     return false;
 }
 
-function drawEndGameScreen(div: HTMLDivElement){
+function drawEndGameScreen(div: HTMLElement){
     const divEndScreen: HTMLDivElement = document.createElement("div");
     divEndScreen.classList.add("end-lvl-area");
 
@@ -393,7 +466,7 @@ function drawEndGameScreen(div: HTMLDivElement){
     })
 }
 
-function drawEndLvlScreen(div: HTMLDivElement){
+function drawEndLvlScreen(div: HTMLElement){
     const divEndScreen: HTMLDivElement = document.createElement("div");
     divEndScreen.classList.add("end-lvl-area");
 
@@ -440,9 +513,109 @@ function generateExit(){
     }
 }
 
-function resetLvl(div: HTMLDivElement, lvl: number=0){
+function resetLvl(div: HTMLElement, lvl: number=0){
     resetDiv(div);
     initLvl(lvl);
     initGrid(div);
+    ammo = 2;
     keyNumber = 0;
+    resetCharacter();
+}
+
+function resetCharacter(){
+    const curCoord: Array<number> = getCurrentCoord();
+    const curTile: HTMLElement | null =  document.getElementById(generateId(curCoord[0], curCoord[1]));
+
+    correspondance[1] = "../images/characterDown.png";
+    curMovement = 3;
+    if(curTile){
+        generateGridImage(curTile, curCoord[0], curCoord[1]);
+    }
+}
+
+function generateImage(src: string): HTMLImageElement{
+    const img: HTMLImageElement = document.createElement("img");
+    img.src = src;
+    return img;
+}
+
+function shoot(){
+    if(!shotAmmo && ammo > 0){
+        shotAmmo = true;
+        ammo--;
+        console.log(ammo);
+        
+        const dir: string = keys[curMovement];
+        const curCoord: Array<number> = getCurrentCoord();
+        const coordShoot: Array<number> = getCoordAfterMove(curCoord[0], curCoord[1], dir);
+
+        if(canBlocMove(coordShoot[0], coordShoot[1], dir)){            
+            const shootTile: HTMLElement | null =  document.getElementById(generateId(coordShoot[0], coordShoot[1]));
+
+            if(shootTile){
+                correspondance[8] = shootOrientation[curMovement];
+                curLvl[coordShoot[0]][coordShoot[1]] = 8;
+                generateGridImage(shootTile, coordShoot[0], coordShoot[1]);
+
+                drawShootMovement(coordShoot[0], coordShoot[1], dir);
+            }
+        }
+        else {
+            killEnemyIfPossible(coordShoot[0], coordShoot[1]);
+            shotAmmo = false;
+        }
+    }
+    return;
+}
+
+async function drawShootMovement(posX: number, posY: number, dir: string){
+    await sleep(50);
+    let nextCoord: Array<number> = getCoordAfterMove(posX, posY, dir);
+    while(canBlocMove(nextCoord[0], nextCoord[1], dir)){
+        moveElement(posX, posY, dir);
+        posX = nextCoord[0];
+        posY = nextCoord[1];
+        nextCoord = getCoordAfterMove(posX, posY, dir);
+        await sleep(50);
+    }
+
+    killEnemyIfPossible(nextCoord[0], nextCoord[1]);
+
+    curLvl[posX][posY] = 0;
+    const shootTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+    if(shootTile){
+        generateGridImage(shootTile, posX, posY);
+    }
+    shotAmmo = false;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function shootSnake(posX: number, posY: number){
+    curLvl[posX][posY] = 7;
+    const snakeTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+    if(snakeTile){
+        generateGridImage(snakeTile, posX, posY);
+    }
+}
+
+function shootBall(posX: number, posY: number){
+    curLvl[posX][posY] = 0;
+    const ballTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+    if(ballTile){
+        generateGridImage(ballTile, posX, posY);
+    }
+}
+
+function killEnemyIfPossible(posX: number, posY: number){
+    if(posX >= 0 && posY >= 0 && posX < curLvl.length-1 && posY < curLvl[posX].length-1){
+        if(curLvl[posX][posY] === 7){
+            shootBall(posX, posY);
+        }
+        else if(curLvl[posX][posY] === 6){
+            shootSnake(posX, posY);
+        }
+    }
 }
