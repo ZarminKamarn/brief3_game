@@ -1,4 +1,4 @@
-import { levels, correspondance, instructions, arrows, instructionsImg, keys, keysByLvl, letters, maxLvl, gameArea, gameScreen, characterOrientation, shootOrientation } from "./data.js";
+import { levels, correspondance, instructions, arrows, instructionsImg, keys, keysByLvl, letters, maxLvl, gameArea, gameScreen, characterOrientation, shootOrientation, monsterOrientation, sleepingMonsterOrientation } from "./data.js";
 
 let curLvl: Array<Array<number>> = [];
 let lvlNumber: number = 0;
@@ -8,8 +8,11 @@ let keyNumber: number = 0;
 let maxKeys: number = keysByLvl[lvlNumber];
 let curInstruction = 0;
 let curMovement = 3;
+let curMonsterMovement = 3;
 
-let ammo = 2;
+let lives: number = 2;
+let maxAmmo: number = 20;
+let ammo: number = maxAmmo;
 let shotAmmo = false;
 
 const arrowUp: HTMLElement | null = document.getElementById("ArrowUp");
@@ -84,7 +87,7 @@ function resetGame(div: HTMLElement){
     curInstruction = 0;
     lvlNumber = 0;
     keyNumber = 0;
-    ammo = 2;
+    ammo = maxAmmo;
 
     document.removeEventListener("keydown", function(event){
         movementListener(div, event.key);
@@ -99,10 +102,10 @@ function resetGame(div: HTMLElement){
         })
     }
 
-    const resetBtn: HTMLElement | null = document.getElementById("reset");
+    const sideDiv: HTMLElement | null = document.getElementById("sideDiv");
     const gameArea: HTMLElement | null = document.getElementById("gameArea");
-    if(resetBtn && gameArea){
-        gameArea.removeChild(resetBtn);
+    if(sideDiv && gameArea){
+        gameArea.removeChild(sideDiv);
     }
 }
 
@@ -113,20 +116,61 @@ function resetDiv(div: HTMLElement){
 }
 
 function initFirstGame(div: HTMLElement){
+    lives = 2;
+    addSideInfos(div);
+
+    initGame(div);
+
+    addGameListener(div);
+}
+
+function addSideInfos(div: HTMLElement){
     if(gameArea){
+        const sideDiv: HTMLDivElement = document.createElement("div");
+        sideDiv.id = "sideDiv";
+
+        const divLives: HTMLDivElement = document.createElement("div");
+        divLives.classList.add("side-div");
+        const imgLives: HTMLImageElement = document.createElement("img");
+        imgLives.src = "../images/characterDown.png";
+        imgLives.classList.add("icon");
+        const pLives: HTMLParagraphElement = document.createElement("p");
+        pLives.innerText = lives.toString();
+        pLives.id = "lives";
+        pLives.classList.add("side-text");
+
+        divLives.append(imgLives, pLives);
+
+        const divAmmo: HTMLDivElement = document.createElement("div");
+        divAmmo.classList.add("side-div");
+        const imgAmmo: HTMLImageElement = document.createElement("img");
+        imgAmmo.src = "../images/ammos.png";
+        imgAmmo.classList.add("icon");
+        const pAmmo: HTMLParagraphElement = document.createElement("p");
+        pAmmo.innerText = ammo.toString();
+        pAmmo.id = "ammo";
+        pAmmo.classList.add("side-text");
+
+        divAmmo.append(imgAmmo, pAmmo);
+
         const btn: HTMLButtonElement = document.createElement("button");
         btn.innerText = "RESET";
         btn.classList.add("reset-btn");
         btn.id = "reset";
-        gameArea.appendChild(btn);
+    
+        sideDiv.classList.add("aside");
+        sideDiv.append(divLives, divAmmo , btn);
+
+        gameArea.appendChild(sideDiv);
 
         btn.addEventListener("click", function(){
             resetLvl(div, lvlNumber);
         })
     }
+    
+}
 
-    initGame(div);
-
+function addGameListener(div: HTMLElement){
     if(arrowUp && arrowLeft && arrowDown && arrowRight){
         const arrArrows: Array<HTMLElement> = [arrowUp, arrowDown, arrowRight, arrowLeft];
         arrArrows.forEach(function(arrow){
@@ -153,15 +197,28 @@ function initFirstGame(div: HTMLElement){
 }
 
 function initGame(div: HTMLElement){
-    keyNumber = 0
+    keyNumber = 0;
     div.classList.add("game-screen-game");
     div.classList.remove("game-screen-accueil");
-    ammo = 2;
+    ammo = maxAmmo;
+    maxKeys = keysByLvl[lvlNumber];
 
+    setAmmo();
+    setLives();
+
+    initLvl(lvlNumber);
     resetDiv(div);
     resetCharacter();
 
     initGrid(div);
+
+    for(let i: number = 0; i < curLvl.length; i++){
+        for(let j: number = 0; j < curLvl[i].length; j++){
+            if(curLvl[i][j] === 9){
+                initMonster(i, j);
+            }
+        }
+    }
 }
 
 function initGrid(div: HTMLElement){
@@ -298,14 +355,14 @@ function movementListener(div: HTMLElement, key: string){
         moveCharacter(div, key);
     }
     else{
-        turnCharacter(div, key);
+        turnCharacter(key);
         return;
     }
 
     lastMoveTime = now;
 }
 
-function turnCharacter(div: HTMLElement, dir: string){
+function turnCharacter(dir: string){
     const curCoord: Array<number> = getCurrentCoord();
     const curTile: HTMLElement | null =  document.getElementById(generateId(curCoord[0], curCoord[1]));
 
@@ -343,6 +400,10 @@ function moveCharacter(div: HTMLElement, dir: string){
 
         moveElement(curCoord[0], curCoord[1], dir);
 
+        if(isSeenByTotem(nextCoord[0], nextCoord[1])){
+            /*resetLvl(div);*/
+        }
+
         if(moveToCase === 5){
             keyNumber++;
             if(keyNumber === maxKeys){
@@ -356,9 +417,13 @@ function moveCharacter(div: HTMLElement, dir: string){
             }
             else{
                 lvlNumber++;
-                maxKeys = keysByLvl[lvlNumber];
                 drawEndLvlScreen(div);
             }
+        }
+    }
+    else if(nextCoord[0] >= 0 && nextCoord[1] >= 0 && nextCoord[0] < curLvl.length && nextCoord[1] < curLvl[nextCoord[0]].length){
+        if (curLvl[nextCoord[0]][nextCoord[1]] === 9){
+            freezeMonster(nextCoord[0], nextCoord[1]);
         }
     }
 }
@@ -395,7 +460,7 @@ function getCoordAfterMove(posX: number, posY: number, dir: string): Array<numbe
     return [nextX, nextY];
 }
 
-function moveElement(coordX: number,coordY: number, dir: string){
+function moveElement(coordX: number, coordY: number, dir: string){
     const nextCoord: Array<number> = getCoordAfterMove(coordX, coordY, dir);
     curLvl[nextCoord[0]][nextCoord[1]] = curLvl[coordX][coordY];
     curLvl[coordX][coordY] = 0;
@@ -420,7 +485,7 @@ function canCharacterMove(posX: number, posY: number, dir: string): boolean{
                 return true;
             }
         }
-        if (curLvl[posX][posY] === 0 || curLvl[posX][posY] === 9 || curLvl[posX][posY] === 5){
+        if (curLvl[posX][posY] === 0 || curLvl[posX][posY] === 13 || curLvl[posX][posY] === 5){
             return true;
         }
     }
@@ -429,7 +494,7 @@ function canCharacterMove(posX: number, posY: number, dir: string): boolean{
 
 function canBlocMove(posX: number, posY: number, dir: string): boolean{
     if(posX >= 0 && posY >= 0 && posX < curLvl.length && posY < curLvl[posX].length){
-        if (curLvl[posX][posY] === 0 || curLvl[posX][posY] === 9){
+        if (curLvl[posX][posY] === 0 || curLvl[posX][posY] === 13){
             return true;
         }
     }
@@ -437,7 +502,7 @@ function canBlocMove(posX: number, posY: number, dir: string): boolean{
 }
 
 function isLevelOver(caseValue: number): boolean{
-    if(caseValue === 9 && keyNumber === maxKeys){
+    if(caseValue === 13 && keyNumber === maxKeys){
         return true;
     }
     return false;
@@ -470,8 +535,6 @@ function drawEndLvlScreen(div: HTMLElement){
     const divEndScreen: HTMLDivElement = document.createElement("div");
     divEndScreen.classList.add("end-lvl-area");
 
-    div.style.position = "relative";
-
     const divText: HTMLDivElement = document.createElement("div");
     divText.classList.add("glass-element");
     divText.classList.add("end-lvl");
@@ -487,8 +550,30 @@ function drawEndLvlScreen(div: HTMLElement){
     div.appendChild(divEndScreen);
 
     btn.addEventListener("click", function(){
-        initLvl(lvlNumber);
         initGame(div);
+    })
+}
+
+function drawGameOverScreen(div: HTMLElement){
+    const divEndScreen: HTMLDivElement = document.createElement("div");
+    divEndScreen.classList.add("end-lvl-area");
+
+    const divText: HTMLDivElement = document.createElement("div");
+    divText.classList.add("glass-element");
+    divText.classList.add("end-lvl");
+
+    const p: HTMLParagraphElement = document.createElement("p");
+    p.innerHTML = `Game Over! Vous n'avez plus de vie`;
+    divText.appendChild(p);
+
+    const btn: HTMLButtonElement = generateButton("Retour à l'accueil");
+    btn.id = "returnBtn";
+
+    divEndScreen.append(divText, btn);
+    div.appendChild(divEndScreen);
+
+    btn.addEventListener("click", function(){
+        initTitleScreen(div);
     })
 }
 
@@ -506,7 +591,7 @@ function initLvl(lvl: number=0){
 
 function generateExit(){
     if(curLvl[0][4] === 0){
-        curLvl[0][4] = 9;
+        curLvl[0][4] = 13;
     }
     else{
         alert("Exit blocked. Impossible to leave");
@@ -514,23 +599,23 @@ function generateExit(){
 }
 
 function resetLvl(div: HTMLElement, lvl: number=0){
-    resetDiv(div);
-    initLvl(lvl);
-    initGrid(div);
-    ammo = 2;
-    keyNumber = 0;
-    resetCharacter();
+    initGame(div);
+
+    lives--;
+    setLives();
+    if(lives === 0){
+        drawGameOverScreen(div);
+    }
 }
 
 function resetCharacter(){
-    const curCoord: Array<number> = getCurrentCoord();
-    const curTile: HTMLElement | null =  document.getElementById(generateId(curCoord[0], curCoord[1]));
-
-    correspondance[1] = "../images/characterDown.png";
     curMovement = 3;
-    if(curTile){
-        generateGridImage(curTile, curCoord[0], curCoord[1]);
-    }
+    correspondance[1] = characterOrientation[curMovement];
+
+    curMonsterMovement = 3;
+    correspondance[9] = monsterOrientation[curMonsterMovement];
+
+    correspondance[11] = "../images/totem.png";
 }
 
 function generateImage(src: string): HTMLImageElement{
@@ -543,7 +628,7 @@ function shoot(){
     if(!shotAmmo && ammo > 0){
         shotAmmo = true;
         ammo--;
-        console.log(ammo);
+        setAmmo();
         
         const dir: string = keys[curMovement];
         const curCoord: Array<number> = getCurrentCoord();
@@ -566,6 +651,20 @@ function shoot(){
         }
     }
     return;
+}
+
+function setAmmo(){
+    const pAmmo: HTMLElement | null = document.getElementById("ammo");
+    if(pAmmo){
+        pAmmo.innerText = ammo.toString();
+    }
+}
+
+function setLives(){
+    const pLives: HTMLElement | null = document.getElementById("lives");
+    if(pLives){
+        pLives.innerText = lives.toString();
+    }
 }
 
 async function drawShootMovement(posX: number, posY: number, dir: string){
@@ -618,4 +717,75 @@ function killEnemyIfPossible(posX: number, posY: number){
             shootSnake(posX, posY);
         }
     }
+}
+
+async function initMonster(posX: number, posY: number) {
+    while(curLvl[posX][posY] === 9){
+        const nextMovement: number = Math.floor(Math.random()*4);
+        if(nextMovement !== curMonsterMovement){
+            curMonsterMovement = nextMovement;
+            correspondance[9] = monsterOrientation[curMonsterMovement];
+            const curTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+            if(curTile){
+                generateGridImage(curTile, posX, posY);
+            }
+        }
+        const nextCoord: Array<number> = getCoordAfterMove(posX, posY, keys[curMonsterMovement]);
+        if(canBlocMove(nextCoord[0], nextCoord[1], keys[curMonsterMovement])){
+            moveElement(posX, posY, keys[curMonsterMovement]);
+            posX = nextCoord[0];
+            posY = nextCoord[1];
+        }
+        else if (encounterPlayer(nextCoord[0], nextCoord[1])){
+            freezeMonster(posX, posY);
+        }
+        else{
+            continue;
+        }
+        await sleep(200);
+    }
+    return;
+}
+
+function encounterPlayer(posX: number, posY: number): boolean{
+    if(posX >= 0 && posY >= 0 && posX < curLvl.length && posY < curLvl[posX].length){
+        if (curLvl[posX][posY] === 1){
+            return true;
+        }
+    }
+    return false;
+}
+
+function freezeMonster(posX: number, posY: number){
+    correspondance[10] = sleepingMonsterOrientation[curMonsterMovement];
+    curLvl[posX][posY] = 10;
+    const curTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+    if(curTile){
+        generateGridImage(curTile, posX, posY);
+    }
+}
+
+function isSeenByTotem(posX: number, posY: number): boolean{
+    let seen = false;
+    for(let i = 0; i < curLvl.length; i++){        
+        if (curLvl[posX][i] === 11){
+            console.log("test");
+            correspondance[11] = "../images/activeTotem.png";
+            const curTile: HTMLElement | null =  document.getElementById(generateId(posX, i));
+            if(curTile){
+                generateGridImage(curTile, posX, i);
+            }
+            seen = true;
+        }
+        if (curLvl[i][posY] === 11){
+            console.log("test");
+            correspondance[11] = "../images/activeTotem.png";
+            const curTile: HTMLElement | null =  document.getElementById(generateId(i, posY));
+            if(curTile){
+                generateGridImage(curTile, i, posY);
+            }
+            seen = true;
+        }
+    }
+    return seen;
 }
