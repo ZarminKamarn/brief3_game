@@ -110,7 +110,7 @@
 }
 
 .game-screen{
-    background-image : url(../images/gameBackground.png);
+    background-image : url(images/gameBackground.png);
     background-repeat : no-repeat;
     background-size : cover;
     width : 500px;

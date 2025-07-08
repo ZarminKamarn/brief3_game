@@ -55,18 +55,18 @@ export const levels = [
 export const keysByLvl = [1, 2, 4, 7];
 export const correspondance = [
     "",
-    "../images/characterDown.png",
-    "../images/tree.png",
-    "../images/boulder.png",
-    "../images/bloc.png",
-    "../images/key.png",
-    "../images/snake.png",
-    "../images/ball.png",
-    "../images/shootDown.png",
-    "../images/monsterDown.png",
-    "../images/sleepingMonsterDown.png",
-    "../images/totem.png",
-    "../images/arrowShotDown.png",
+    "./images/characterDown.png",
+    "./images/tree.png",
+    "./images/boulder.png",
+    "./images/bloc.png",
+    "./images/key.png",
+    "./images/snake.png",
+    "./images/ball.png",
+    "./images/shootDown.png",
+    "./images/monsterDown.png",
+    "./images/sleepingMonsterDown.png",
+    "./images/totem.png",
+    "./images/arrowShotDown.png",
     ""
 ];
 export const instructions = [
@@ -92,11 +92,11 @@ export const instructionsImg = [
     []
 ];
 export const keys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
-export const characterOrientation = ["../images/characterRight.png", "../images/characterLeft.png", "../images/characterUp.png", "../images/characterDown.png"];
-export const shootOrientation = ["../images/shootRight.png", "../images/shootLeft.png", "../images/shootUp.png", "../images/shootDown.png"];
-export const monsterOrientation = ["../images/monsterRight.png", "../images/monsterLeft.png", "../images/monsterUp.png", "../images/monsterDown.png"];
-export const sleepingMonsterOrientation = ["../images/sleepingMonsterRight.png", "../images/sleepingMonsterLeft.png", "../images/sleepingMonsterUp.png", "../images/sleepingMonsterDown.png"];
-export const arrows = ["../images/arrowLeft.png", "../images/arrowRight.png", "../images/arrowUp.png", "../images/arrowDown.png"];
+export const characterOrientation = ["./images/characterRight.png", "./images/characterLeft.png", "./images/characterUp.png", "./images/characterDown.png"];
+export const shootOrientation = ["./images/shootRight.png", "./images/shootLeft.png", "./images/shootUp.png", "./images/shootDown.png"];
+export const monsterOrientation = ["./images/monsterRight.png", "./images/monsterLeft.png", "./images/monsterUp.png", "./images/monsterDown.png"];
+export const sleepingMonsterOrientation = ["./images/sleepingMonsterRight.png", "./images/sleepingMonsterLeft.png", "./images/sleepingMonsterUp.png", "./images/sleepingMonsterDown.png"];
+export const arrows = ["./images/arrowLeft.png", "./images/arrowRight.png", "./images/arrowUp.png", "./images/arrowDown.png"];
 export const letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"];
 export const maxLvl = levels.length - 1;
 export const gameArea = document.getElementById("gameArea");

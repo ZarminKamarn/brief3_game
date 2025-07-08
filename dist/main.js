@@ -114,7 +114,7 @@ function addSideInfos(div) {
         const divLives = document.createElement("div");
         divLives.classList.add("side-div");
         const imgLives = document.createElement("img");
-        imgLives.src = "../images/characterDown.png";
+        imgLives.src = "./images/characterDown.png";
         imgLives.classList.add("icon");
         const pLives = document.createElement("p");
         pLives.innerText = lives.toString();
@@ -124,7 +124,7 @@ function addSideInfos(div) {
         const divAmmo = document.createElement("div");
         divAmmo.classList.add("side-div");
         const imgAmmo = document.createElement("img");
-        imgAmmo.src = "../images/ammos.png";
+        imgAmmo.src = "./images/ammos.png";
         imgAmmo.classList.add("icon");
         const pAmmo = document.createElement("p");
         pAmmo.innerText = ammo.toString();
@@ -513,7 +513,7 @@ function resetCharacter() {
     correspondance[1] = characterOrientation[curMovement];
     curMonsterMovement = 3;
     correspondance[9] = monsterOrientation[curMonsterMovement];
-    correspondance[11] = "../images/totem.png";
+    correspondance[11] = "./images/totem.png";
 }
 function generateImage(src) {
     const img = document.createElement("img");
@@ -653,7 +653,7 @@ function isSeenByTotem(posX, posY) {
     for (let i = 0; i < curLvl.length; i++) {
         if (curLvl[posX][i] === 11) {
             console.log("test");
-            correspondance[11] = "../images/activeTotem.png";
+            correspondance[11] = "./images/activeTotem.png";
             const curTile = document.getElementById(generateId(posX, i));
             if (curTile) {
                 generateGridImage(curTile, posX, i);
@@ -662,7 +662,7 @@ function isSeenByTotem(posX, posY) {
         }
         if (curLvl[i][posY] === 11) {
             console.log("test");
-            correspondance[11] = "../images/activeTotem.png";
+            correspondance[11] = "./images/activeTotem.png";
             const curTile = document.getElementById(generateId(i, posY));
             if (curTile) {
                 generateGridImage(curTile, i, posY);

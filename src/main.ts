@@ -132,7 +132,7 @@ function addSideInfos(div: HTMLElement){
         const divLives: HTMLDivElement = document.createElement("div");
         divLives.classList.add("side-div");
         const imgLives: HTMLImageElement = document.createElement("img");
-        imgLives.src = "../images/characterDown.png";
+        imgLives.src = "./images/characterDown.png";
         imgLives.classList.add("icon");
         const pLives: HTMLParagraphElement = document.createElement("p");
         pLives.innerText = lives.toString();
@@ -144,7 +144,7 @@ function addSideInfos(div: HTMLElement){
         const divAmmo: HTMLDivElement = document.createElement("div");
         divAmmo.classList.add("side-div");
         const imgAmmo: HTMLImageElement = document.createElement("img");
-        imgAmmo.src = "../images/ammos.png";
+        imgAmmo.src = "./images/ammos.png";
         imgAmmo.classList.add("icon");
         const pAmmo: HTMLParagraphElement = document.createElement("p");
         pAmmo.innerText = ammo.toString();
@@ -615,7 +615,7 @@ function resetCharacter(){
     curMonsterMovement = 3;
     correspondance[9] = monsterOrientation[curMonsterMovement];
 
-    correspondance[11] = "../images/totem.png";
+    correspondance[11] = "./images/totem.png";
 }
 
 function generateImage(src: string): HTMLImageElement{
@@ -770,7 +770,7 @@ function isSeenByTotem(posX: number, posY: number): boolean{
     for(let i = 0; i < curLvl.length; i++){        
         if (curLvl[posX][i] === 11){
             console.log("test");
-            correspondance[11] = "../images/activeTotem.png";
+            correspondance[11] = "./images/activeTotem.png";
             const curTile: HTMLElement | null =  document.getElementById(generateId(posX, i));
             if(curTile){
                 generateGridImage(curTile, posX, i);
@@ -779,7 +779,7 @@ function isSeenByTotem(posX: number, posY: number): boolean{
         }
         if (curLvl[i][posY] === 11){
             console.log("test");
-            correspondance[11] = "../images/activeTotem.png";
+            correspondance[11] = "./images/activeTotem.png";
             const curTile: HTMLElement | null =  document.getElementById(generateId(i, posY));
             if(curTile){
                 generateGridImage(curTile, i, posY);
