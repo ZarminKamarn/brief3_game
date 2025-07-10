@@ -123,3 +123,24 @@ export const letters: Array<string> = ["a","b","c","d","e","f","g","h","i","j","
 export const maxLvl: number = levels.length-1;
 export const gameArea: HTMLElement | null = document.getElementById("gameArea");
 export const gameScreen: HTMLElement | null = document.getElementById("gameScreen");
+
+export const arrowUp: HTMLElement | null = document.getElementById("ArrowUp");
+export const arrowLeft: HTMLElement | null = document.getElementById("ArrowLeft");
+export const arrowDown: HTMLElement | null = document.getElementById("ArrowDown");
+export const arrowRight: HTMLElement | null = document.getElementById("ArrowRight");
+
+export const btnShoot: HTMLElement | null = document.getElementById("shoot");
+
+export const maxAmmo: number = 2;
+
+export const variables = {
+    lvlNumber: 0,
+    keyNumber: 0,
+    curLvl: levels[0],
+    maxKeys: 0,
+    curInstruction: 0,
+    curMovement: 3,
+    curMonsterMovement: 3,
+    lives: 2,
+    ammo: maxAmmo
+}

@@ -1,0 +1,11 @@
+import { keysByLvl, maxAmmo } from "./data";
+let curLvl = [];
+let lvlNumber = 0;
+let keyNumber = 0;
+let maxKeys = keysByLvl[lvlNumber];
+let curInstruction = 0;
+let curMovement = 3;
+let curMonsterMovement = 3;
+let lives = 2;
+let ammo = maxAmmo;
+let shotAmmo = false;

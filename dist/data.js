@@ -118,3 +118,20 @@ export const letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"];
 export const maxLvl = levels.length - 1;
 export const gameArea = document.getElementById("gameArea");
 export const gameScreen = document.getElementById("gameScreen");
+export const arrowUp = document.getElementById("ArrowUp");
+export const arrowLeft = document.getElementById("ArrowLeft");
+export const arrowDown = document.getElementById("ArrowDown");
+export const arrowRight = document.getElementById("ArrowRight");
+export const btnShoot = document.getElementById("shoot");
+export const maxAmmo = 2;
+export const variables = {
+    lvlNumber: 0,
+    keyNumber: 0,
+    curLvl: levels[0],
+    maxKeys: 0,
+    curInstruction: 0,
+    curMovement: 3,
+    curMonsterMovement: 3,
+    lives: 2,
+    ammo: maxAmmo
+};
