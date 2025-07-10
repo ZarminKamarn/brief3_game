@@ -1,4 +1,4 @@
-import { levels, correspondance, instructions, arrows, instructionsImg, keys, keysByLvl, letters, maxLvl, gameArea, gameScreen, characterOrientation, shootOrientation, monsterOrientation, sleepingMonsterOrientation } from "./data.js";
+import { levels, correspondance, instructions, arrows, instructionsImg, keys, keysByLvl, letters, maxLvl, gameArea, gameScreen, characterOrientation, shootOrientation, monsterOrientation, sleepingMonsterOrientation, totemArrowOrientation } from "./data.js";
 
 let curLvl: Array<Array<number>> = [];
 let lvlNumber: number = 0;
@@ -9,9 +9,10 @@ let maxKeys: number = keysByLvl[lvlNumber];
 let curInstruction = 0;
 let curMovement = 3;
 let curMonsterMovement = 3;
+let totemShootDirection = -1;
 
 let lives: number = 2;
-let maxAmmo: number = 20;
+let maxAmmo: number = 2;
 let ammo: number = maxAmmo;
 let shotAmmo = false;
 
@@ -89,18 +90,7 @@ function resetGame(div: HTMLElement){
     keyNumber = 0;
     ammo = maxAmmo;
 
-    document.removeEventListener("keydown", function(event){
-        movementListener(div, event.key);
-    })
-
-    if(arrowUp && arrowLeft && arrowDown && arrowRight){
-        const arrArrows: Array<HTMLElement> = [arrowUp, arrowDown, arrowRight, arrowLeft];
-        arrArrows.forEach(function(arrow){
-            arrow.removeEventListener("click", function(){
-                movementListener(div, arrow.id);
-            });
-        })
-    }
+    removeGameListener(div);
 
     const sideDiv: HTMLElement | null = document.getElementById("sideDiv");
     const gameArea: HTMLElement | null = document.getElementById("gameArea");
@@ -180,20 +170,38 @@ function addGameListener(div: HTMLElement){
         })
     }
     if(btnShoot){
-        btnShoot.addEventListener("click", function(){
-            shoot();
-        })
+        btnShoot.addEventListener("click", shoot);
     }
 
-    document.addEventListener("keydown", function(event){
+    document.addEventListener("keydown", keydownEvent);
+}
+
+function removeGameListener(div: HTMLElement){
+    if(arrowUp && arrowLeft && arrowDown && arrowRight){
+        const arrArrows: Array<HTMLElement> = [arrowUp, arrowDown, arrowRight, arrowLeft];
+        arrArrows.forEach(function(arrow){
+            arrow.removeEventListener("click", function(){
+                movementListener(div, arrow.id);
+            });
+        })
+    }
+    if(btnShoot){
+        btnShoot.removeEventListener("click", shoot);
+    }
+
+    document.removeEventListener("keydown", keydownEvent);
+}
+
+function keydownEvent(event: KeyboardEvent){
+    if(gameScreen){
         if(event.key === " "){
             shoot();
         }
         if(keys.indexOf(event.key) !== -1){
             event.preventDefault();
-            movementListener(div, event.key);
+            movementListener(gameScreen, event.key);
         };
-    });
+    }
 }
 
 function initGame(div: HTMLElement){
@@ -400,18 +408,13 @@ function moveCharacter(div: HTMLElement, dir: string){
 
         moveElement(curCoord[0], curCoord[1], dir);
 
-        if(isSeenByTotem(nextCoord[0], nextCoord[1])){
-            /*resetLvl(div);*/
-        }
+        isSeenByTotem(div, nextCoord[0], nextCoord[1])
 
         if(moveToCase === 5){
             keyNumber++;
-            if(keyNumber === maxKeys){
-                generateExit();
-            }
         }
 
-        if(isLevelOver(moveToCase)){
+        if(isLevelOver(nextCoord[0], nextCoord[1])){
             if(lvlNumber === maxLvl){
                 drawEndGameScreen(div);
             }
@@ -501,8 +504,8 @@ function canBlocMove(posX: number, posY: number, dir: string): boolean{
     return false;
 }
 
-function isLevelOver(caseValue: number): boolean{
-    if(caseValue === 13 && keyNumber === maxKeys){
+function isLevelOver(posX: number, posY: number): boolean{
+    if(posX === 0 && posY === 4 && keyNumber === maxKeys){
         return true;
     }
     return false;
@@ -586,15 +589,6 @@ function initLvl(lvl: number=0){
             arr.push(levels[lvl][i][j]);
         }
         curLvl.push(arr);
-    }
-}
-
-function generateExit(){
-    if(curLvl[0][4] === 0){
-        curLvl[0][4] = 13;
-    }
-    else{
-        alert("Exit blocked. Impossible to leave");
     }
 }
 
@@ -765,27 +759,141 @@ function freezeMonster(posX: number, posY: number){
     }
 }
 
-function isSeenByTotem(posX: number, posY: number): boolean{
-    let seen = false;
+function isSeenByTotem(div: HTMLElement, posX: number, posY: number){
+    deactivateAllTotems();
+
     for(let i = 0; i < curLvl.length; i++){        
         if (curLvl[posX][i] === 11){
-            console.log("test");
-            correspondance[11] = "./images/activeTotem.png";
-            const curTile: HTMLElement | null =  document.getElementById(generateId(posX, i));
-            if(curTile){
-                generateGridImage(curTile, posX, i);
+            activateTotem(posX, i);
+            if(canTotemShoot(posX, i, posX, posY)){
+                getTotemDirection(posX, i, posX, posY);
+                totemShoots(div, posX, i);
+                return;
             }
-            seen = true;
         }
         if (curLvl[i][posY] === 11){
-            console.log("test");
-            correspondance[11] = "./images/activeTotem.png";
-            const curTile: HTMLElement | null =  document.getElementById(generateId(i, posY));
-            if(curTile){
-                generateGridImage(curTile, i, posY);
+            activateTotem(i, posY);
+            if(canTotemShoot(i, posY, posX, posY)){
+                getTotemDirection(i, posY, posX, posY);
+                totemShoots(div, i, posY);
             }
-            seen = true;
         }
     }
-    return seen;
+}
+
+function activateTotem(posX: number, posY: number){
+    correspondance[11] = "./images/activeTotem.png";
+    const curTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+    if(curTile){
+        generateGridImage(curTile, posX, posY);
+    }
+}
+
+function deactivateAllTotems(){
+    for(let i: number = 0; i < curLvl.length; i++){
+        for(let j: number = 0; j < curLvl[i].length; j++){
+            if(curLvl[i][j] === 11){
+                deactivateTotem(i, j);
+            }
+        }
+    }
+}
+
+function deactivateTotem(posX: number, posY: number){
+    correspondance[11] = "./images/totem.png";
+    const curTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+    if(curTile){
+        generateGridImage(curTile, posX, posY);
+    }
+}
+
+function canTotemShoot(posX: number, posY: number, targetX: number, targetY: number): boolean{
+    if(posX === targetX){
+        const min: number = Math.min(posY, targetY);
+        const max: number = Math.max(posY, targetY);
+
+        for(let i = min+1; i < max; i++){
+            if(curLvl[posX][i] !== 0 && curLvl[posX][i] !== 2){
+                return false;
+            }
+        }
+    }
+    else if (posY === targetY){
+        const min: number = Math.min(posX, targetX);
+        const max: number = Math.max(posX, targetX);
+
+        for(let i = min+1; i < max; i++){
+            if(curLvl[i][posY] !== 0 && curLvl[i][posY] !== 2){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+async function totemShoots(div: HTMLElement, posX: number, posY: number){
+    removeGameListener(div);
+
+    const dir: string = keys[totemShootDirection];
+    let nextCoord: Array<number> = getCoordAfterMove(posX, posY, dir);
+    if(!encounterPlayer(nextCoord[0], nextCoord[1])){
+        correspondance[12] = totemArrowOrientation[totemShootDirection];
+        posX = nextCoord[0];
+        posY = nextCoord[1];
+
+        const nextTile: HTMLElement | null =  document.getElementById(generateId(nextCoord[0], nextCoord[1]));
+        if(nextTile){
+            curLvl[nextCoord[0]][nextCoord[1]] = 12;
+            generateGridImage(nextTile, nextCoord[0], nextCoord[1]);
+        }
+        nextCoord = getCoordAfterMove(posX, posY, dir);
+
+        while(!encounterPlayer(nextCoord[0], nextCoord[1])){
+            await sleep(60);
+            moveElement(posX, posY, dir);
+
+            if(levels[lvlNumber][posX][posY]){
+                const treeTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+                if(treeTile){
+                    curLvl[posX][posY] = 2;
+                    generateGridImage(treeTile, posX, posY);
+                }
+            }
+            posX = nextCoord[0];
+            posY = nextCoord[1];
+            nextCoord = getCoordAfterMove(posX, posY, dir);
+        }
+
+        curLvl[posX][posY] = 12;
+        const shootTile: HTMLElement | null =  document.getElementById(generateId(posX, posY));
+        if(shootTile){
+            generateGridImage(shootTile, posX, posY);
+            await sleep(60);
+            curLvl[posX][posY] = 0;
+            generateGridImage(shootTile, posX, posY);
+        }
+
+        await sleep(60);
+    }
+    resetLvl(div);
+    addGameListener(div);
+}
+
+function getTotemDirection(posX: number, posY: number, targetX: number, targetY: number){
+    if(posX === targetX){
+        if(posY < targetY){
+            totemShootDirection = 0;
+        }
+        else{
+            totemShootDirection = 1;
+        }
+    }
+    else{
+        if(posX > targetX){
+            totemShootDirection = 2;
+        }
+        else{
+            totemShootDirection = 3;
+        }
+    }
 }
