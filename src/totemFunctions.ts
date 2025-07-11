@@ -78,7 +78,7 @@ export function canTotemShoot(posX: number, posY: number, targetX: number, targe
 }
 
 export async function totemShoots(div: HTMLElement, posX: number, posY: number){
-    removeGameListener(div);
+    removeGameListener();
 
     const dir: string = keys[totemShootDirection];
     let nextCoord: Array<number> = getCoordAfterMove(posX, posY, dir);
@@ -126,8 +126,8 @@ export async function totemShoots(div: HTMLElement, posX: number, posY: number){
 
         await sleep(60);
     }
-    resetLvl(div);
-    addGameListener(div);
+    resetLvl();
+    addGameListener();
 }
 
 export function getTotemDirection(posX: number, posY: number, targetX: number, targetY: number): void{

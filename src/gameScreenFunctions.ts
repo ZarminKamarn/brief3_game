@@ -5,7 +5,7 @@ import { generateButton, initTitleScreen } from "./otherScreenFunctions.js";
 import { shoot } from "./playerFunctions.js";
 
 export function drawEndGameScreen(div: HTMLElement): void{
-    removeGameListener(div);
+    removeGameListener();
     const divEndScreen: HTMLDivElement = document.createElement("div");
     divEndScreen.classList.add("end-lvl-area");
 
@@ -29,7 +29,7 @@ export function drawEndGameScreen(div: HTMLElement): void{
 }
 
 export function drawEndLvlScreen(div: HTMLElement): void{
-    removeGameListener(div);
+    removeGameListener();
     const divEndScreen: HTMLDivElement = document.createElement("div");
     divEndScreen.classList.add("end-lvl-area");
 
@@ -53,7 +53,7 @@ export function drawEndLvlScreen(div: HTMLElement): void{
 }
 
 export function drawGameOverScreen(div: HTMLElement): void{
-    removeGameListener(div);
+    removeGameListener();
     const divEndScreen: HTMLDivElement = document.createElement("div");
     divEndScreen.classList.add("end-lvl-area");
 
@@ -88,13 +88,15 @@ export function initLvl(lvl: number=0): void{
     }
 }
 
-export function resetLvl(div: HTMLElement, lvl: number=0): void{
-    initGame(div);
+export function resetLvl(): void{
+    if(gameScreen){
+        initGame(gameScreen);
 
-    variables.lives--;
-    drawLives();
-    if(variables.lives === 0){
-        drawGameOverScreen(div);
+        variables.lives--;
+        drawLives();
+        if(variables.lives === 0){
+            drawGameOverScreen(gameScreen);
+        }
     }
 }
 
@@ -127,7 +129,7 @@ export function resetGame(div: HTMLElement): void{
     variables.keyNumber = 0;
     variables.ammo = maxAmmo;
 
-    removeGameListener(div);
+    removeGameListener();
 
     const sideDiv: HTMLElement | null = document.getElementById("sideDiv");
     const gameArea: HTMLElement | null = document.getElementById("gameArea");
@@ -188,20 +190,16 @@ export function addSideInfos(div: HTMLElement): void{
 
         gameArea.appendChild(sideDiv);
 
-        btn.addEventListener("click", function(){
-            resetLvl(div, variables.lvlNumber);
-        })
+        btn.addEventListener("click", resetLvl);
     }
     
 }
 
-export function addGameListener(div: HTMLElement): void{
+export function addGameListener(): void{
     if(arrowUp && arrowLeft && arrowDown && arrowRight){
         const arrArrows: Array<HTMLElement> = [arrowUp, arrowDown, arrowRight, arrowLeft];
         arrArrows.forEach(function(arrow){
-            arrow.addEventListener("click", function(){
-                movementListener(div, arrow.id);
-            });
+            arrow.addEventListener("click", arrowPressedEvent);
         })
     }
     if(btnShoot){
@@ -209,15 +207,18 @@ export function addGameListener(div: HTMLElement): void{
     }
 
     document.addEventListener("keydown", keydownEvent);
+
+    const btnReset: HTMLElement | null = document.getElementById("reset");
+    if(btnReset){
+        btnReset.addEventListener("click", resetLvl);
+    }
 }
 
-export function removeGameListener(div: HTMLElement): void{
+export function removeGameListener(): void{
     if(arrowUp && arrowLeft && arrowDown && arrowRight){
         const arrArrows: Array<HTMLElement> = [arrowUp, arrowDown, arrowRight, arrowLeft];
         arrArrows.forEach(function(arrow){
-            arrow.removeEventListener("click", function(){
-                movementListener(div, arrow.id);
-            });
+            arrow.removeEventListener("click", arrowPressedEvent);
         })
     }
     if(btnShoot){
@@ -225,6 +226,20 @@ export function removeGameListener(div: HTMLElement): void{
     }
 
     document.removeEventListener("keydown", keydownEvent);
+
+    const btnReset: HTMLElement | null = document.getElementById("reset");
+    if(btnReset){
+        btnReset.removeEventListener("click", resetLvl);
+    }
+}
+
+export function arrowPressedEvent(event: MouseEvent): void{
+    if(gameScreen){
+        if(event.target instanceof HTMLElement && event.target.parentElement){
+            const arrowPressed: string = event.target.parentElement.id;
+            movementListener(gameScreen, arrowPressed);
+        }
+    }
 }
 
 export function keydownEvent(event: KeyboardEvent): void{
@@ -263,7 +278,7 @@ export function initGame(div: HTMLElement): void{
             }
         }
     }
-    addGameListener(div);
+    addGameListener();
 }
 
 export function initGrid(div: HTMLElement): void{
