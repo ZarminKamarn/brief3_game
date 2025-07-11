@@ -135,7 +135,9 @@ export async function totemShoots(
     await sleep(60);
   }
   resetLvl();
-  addGameListener();
+  if(variables.lives > 0){
+    addGameListener();
+  }
 }
 
 export function getTotemDirection(
