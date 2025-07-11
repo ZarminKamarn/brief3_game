@@ -183,6 +183,7 @@ export function removeGameListener(div) {
 export function keydownEvent(event) {
     if (gameScreen) {
         if (event.key === " ") {
+            event.preventDefault();
             shoot();
         }
         if (keys.indexOf(event.key) !== -1) {

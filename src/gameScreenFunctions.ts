@@ -230,6 +230,7 @@ export function removeGameListener(div: HTMLElement): void{
 export function keydownEvent(event: KeyboardEvent): void{
     if(gameScreen){
         if(event.key === " "){
+            event.preventDefault();
             shoot();
         }
         if(keys.indexOf(event.key) !== -1){
