@@ -92,6 +92,7 @@
 .game-image {
   height: 90%;
   width: auto;
+  max-width: 100%
 }
 
 .return-btn {
